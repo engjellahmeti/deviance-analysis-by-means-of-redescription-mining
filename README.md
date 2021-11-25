@@ -1,1 +1,1 @@
-# deviance-analysis-by-means-of-redescription-mining
+# Deviance Analysis by means of Redescription Mining
