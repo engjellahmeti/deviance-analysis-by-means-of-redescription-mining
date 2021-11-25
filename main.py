@@ -74,21 +74,19 @@ class Main:
         positive = None
 
         if only_negative_logs:
-            # g.generate_logs(declare_file_path=declare_file_path, event_log_location=negative_event_log_path)#, amount_of_traces=amount_of_traces)
+            g.generate_logs(declare_file_path=declare_file_path, event_log_location=negative_event_log_path)#, amount_of_traces=amount_of_traces)
             for dc in declare_constraints:
                 print()
                 dc.__str__()
                 negative = self.discover_redescription_for_each_constraint(frame=negative, event_log_path=negative_event_log_path, declare_constraint=dc, is_positive_or_negative_log='negative', filename=filename)
 
         elif generate_logs:
-            # g.generate_logs(declare_file_path=declare_file_path, event_log_location=positive_event_log_path, both_positive_negative_event=True)
-            # g.generate_logs(declare_file_path=declare_file_path, event_log_location=positive_event_log_path)#, amount_of_traces=amount_of_traces)
+            g.generate_logs(declare_file_path=declare_file_path, event_log_location=positive_event_log_path, both_positive_negative_event=True, amount_of_traces=amount_of_traces)
 
             for dc in declare_constraints:
                 dc.__str__()
-                # negative = self.discover_redescription_for_each_constraint(frame=negative, event_log_path=negative_event_log_path, declare_constraint=dc, is_positive_or_negative_log='negative', filename=filename)
+                negative = self.discover_redescription_for_each_constraint(frame=negative, event_log_path=negative_event_log_path, declare_constraint=dc, is_positive_or_negative_log='negative', filename=filename)
 
-                # if dc.activation == 'DeliverOrder':# not (dc.activation == 'OrderProduct' and dc.target == 'PayOrder'):
                 positive = self.discover_redescription_for_each_constraint(frame=positive, event_log_path=positive_event_log_path, declare_constraint=dc, is_positive_or_negative_log='positive', filename=filename)
                 print()
 
@@ -401,7 +399,6 @@ if __name__ == '__main__':
         filename = 'repair-example'#'#credit-application-subset' #running-example' # road-traffic-fines,repair-example
         declare_filename = 'Repair Example'#Credit Application Subset'#Running Example' # 'FirstPaperExample'  # Repair Example, Road Traffic Fines
 
-        # traces = main.ContraintInstanceExtraction('positive', declare_filename, filename, algorithm=algorithm)
 
     if input_type == 1:
         generate_logs = True
@@ -419,7 +416,6 @@ if __name__ == '__main__':
                 elif positive is not None:
                     posBool = False
             else:
-                break
                 onlyNegative = True
                 (negative, positive) = main.input_declare_file(filename=filename, declare_file_path=declare_file_path, generate_logs=generate_logs, only_negative_logs=only_negative_logs)
                 if negative.shape[0] > 0:
