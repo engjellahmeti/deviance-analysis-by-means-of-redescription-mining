@@ -2,6 +2,7 @@
 # @author Engjëll Ahmeti
 # @date 12/8/2020
 
+import re
 from pandas.core.frame import DataFrame
 from feature_vectors.declare_constraint import DeclareConstraint
 from feature_vectors.rule_extractor import RuleExtractor
@@ -16,7 +17,6 @@ import random as rd
 import sys, getopt
 from redescription_mining.data_model import RedescriptionDataModel
 from typing import List, Optional, Tuple
-# and its attributes comparisons to the positive rules attributes are below:
 
 
 class Main:
@@ -38,7 +38,7 @@ class Main:
                                                                                         write_to_CSV=True,
                                                                                         remove_attributes=True)
 
-        redescriptions = self.redesc.discover_redescriptions(redescription_data_model=redescription_data_model, is_positive_or_negative_log=is_positive_or_negative_log, left_activity=declare_constraint.activation, right_activity=declare_constraint.target,
+        redescriptions = self.redesc.discover_redescriptions(redescription_data_model=redescription_data_model, is_positive_or_negative_log=is_positive_or_negative_log, activation_activity=declare_constraint.activation, target_activity=declare_constraint.target,
                                                                 config_or_template=self.config_or_template, filename=filename+'-'+algorithm, algorithm=self.algorithm) # algorithm='reremi')
         
         if not redescriptions.empty:
@@ -223,6 +223,7 @@ class Main:
         declare_file_path = os.path.abspath('event_log_generation/declare constraint files/{0}.decl'.format(declare_filename))
         declare_constraints = g.get_declare_constraints(declare_file_path=declare_file_path)
 
+        result = {}
         for dc in declare_constraints:
             is_positive_or_negative_log = 'negative'
             _ = self.ruleExt.extract_fulfilment(event_log_path=negative_event_log_path,
@@ -231,28 +232,27 @@ class Main:
                                                             write_to_CSV=True,
                                                             remove_attributes=True)
 
-            is_positive_or_negative_log = 'positive'
 
             if os.path.exists(os.path.abspath('redescription_mining/results/' + filename + '-' + algorithm + '-positive.queries')):
-                return self.nlg_.find_deviant_traces(filename + '-' + algorithm)
-            else:
-                redescription_data_model: RedescriptionDataModel = self.ruleExt.extract_fulfilment(
-                    event_log_path=positive_event_log_path,
-                    declare_constraint=dc,
-                    is_positive_or_negative_log=is_positive_or_negative_log,
-                    write_to_CSV=True,
-                    remove_attributes=True)
+                output = self.nlg_.find_deviant_traces(filename + '-' + algorithm)
 
-                _ = self.redesc.discover_redescriptions(redescription_data_model=redescription_data_model, is_positive_or_negative_log=is_positive_or_negative_log, left_activity=dc.activation, right_activity=dc.target,
-                                                                       config_or_template=self.config_or_template,
-                                                  filename=filename + '-' + algorithm,
-                                                  algorithm=self.algorithm)
+                if len(result.keys()) == 0:
+                    result = output
+                else:
+                    for key in output.keys():
+                        if key not in result.keys():
+                            result[key] = output[key]
+                        else:
+                            for rule in output[key].keys():
+                                if rule not in result[key].keys():
+                                    result[key][rule] = output[key][rule]
+                                else:
+                                    result[key][rule] = list(set(result[key][rule] + output[key][rule]))
 
-                if _.shape[0] > 0:
-                    return self.nlg_.find_deviant_traces(filename + '-' + algorithm)
 
-            Print.YELLOW.print('Extraction of where the traces failed is finished. ')
-            return None
+
+         
+        return result
 
     def contraint_instance_extraction(self, is_positive_or_negative_log, declare_filename, filename, algorithm='reremi'):
         event_log_path = 'event_log_reader/logs/' + filename + '-{0}.xes'.format(is_positive_or_negative_log)
@@ -276,8 +276,7 @@ class Main:
         output = 'Concrete examples of traces that failed:\n'
 
         if len(traces) > 0:
-            traces_chunked = rd.choices(list(traces.keys()), k=k)
-            for trace in traces_chunked:
+            for trace in traces:
                 if len(traces[trace].keys()) >= 3:
                     rules_total = list(traces[trace].keys())
                     rules = [rd.choice(rules_total)]
@@ -393,12 +392,11 @@ if __name__ == '__main__':
     else:
         extract_dsynts_on_leafs = False
         input_type = 8
-        algorithm = 'splittrees' # 'splittrees' reremi
+        algorithm = 'reremi' # 'splittrees' reremi
         config_or_template = 'template' # 'config'
         main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template)
-        filename = 'repair-example'#'#credit-application-subset' #running-example' # road-traffic-fines,repair-example
-        declare_filename = 'Repair Example'#Credit Application Subset'#Running Example' # 'FirstPaperExample'  # Repair Example, Road Traffic Fines
-
+        filename = 'running-example'#'#credit-application-subset' #running-example' # road-traffic-fines,repair-example
+        declare_filename = 'Running Example'#Credit Application Subset'#Running Example' # 'FirstPaperExample'  # Repair Example, Road Traffic Fines
 
     if input_type == 1:
         generate_logs = True
@@ -416,6 +414,7 @@ if __name__ == '__main__':
                 elif positive is not None:
                     posBool = False
             else:
+                break
                 onlyNegative = True
                 (negative, positive) = main.input_declare_file(filename=filename, declare_file_path=declare_file_path, generate_logs=generate_logs, only_negative_logs=only_negative_logs)
                 if negative.shape[0] > 0:
@@ -439,7 +438,6 @@ if __name__ == '__main__':
         declare_file_path = os.path.abspath('event_log_generation/declare constraint files/{0}.decl'.format(declare_filename))
 
         declare_constraints = g.get_declare_constraints(declare_file_path=declare_file_path)
-        # declare_constraints.append(DeclareConstraint('precedence', 'Assessment', 'ApplyForCredit'))
 
         (negative, positive) = main.input_positive_and_event_logs_together_with_declare_constraints(positive_event_log_path=positive_event_log_path, negative_event_log_path=negative_event_log_path, declare_constraints=declare_constraints, filename=filename)
 
@@ -453,11 +451,8 @@ if __name__ == '__main__':
         #
         negative_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-negative.queries')
         positive_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-positive.queries')
-        (setOfRules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
-        (set_of_rules, redescriptions, _) = main.nlg_call(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
+        (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
 
-        # print()
-        # print()
         output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
 
         output += output_compare
@@ -465,8 +460,6 @@ if __name__ == '__main__':
         output_deviant = main.print_trace_failure(traces=traces, k=5)
 
         output += output_deviant
-        # if not extract_dsynts_on_leafs:
-            # list_of_dsynts = main.get_dsynts(set_of_rules=set_of_rules)
 
         with open(os.path.abspath('nlg/output/'+filename+'-'+algorithm+'.txt'), 'wt') as a:
             a.write(output)

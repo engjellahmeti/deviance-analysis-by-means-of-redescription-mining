@@ -16,21 +16,3 @@ class Negation:
 
     def __str__(self):
         return self.rule.__str__()
-
-    # def extractTree(self):
-    #     dict = {}
-    #     dict['not'] = self.rule.tree
-    #
-    #     return dict
-    #
-    # def extractCoNLL(self):
-    #     dict = {}
-    #     dict['not'] = self.rule.CoNLL
-    #
-    #     return dict
-    #
-    # def extractDSyntS(self):
-    #     dict = {}
-    #     dict['not'] = self.rule.DSyntS
-    #
-    #     return dict

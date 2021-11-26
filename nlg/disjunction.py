@@ -17,22 +17,3 @@ class Disjunction:
 
     def __str__(self) -> str:
         return self.leftSide.__str__() + 'or ' + self.rightSide.__str__()
-        # return self.leftSide + '<operator value="|">' + self.rightSide
-
-    # def extractTree(self):
-    #     dict = {}
-    #     dict['or'] = [self.leftSide.tree, self.rightSide.tree]
-    #
-    #     return dict
-    #
-    # def extractCoNLL(self):
-    #     dict = {}
-    #     dict['or'] = [self.leftSide.CoNLL, self.rightSide.CoNLL]
-    #
-    #     return dict
-    #
-    # def extractDSyntS(self):
-    #     dict = {}
-    #     dict['or'] = [self.leftSide.DSyntS, self.rightSide.DSyntS]
-    #
-    #     return dict

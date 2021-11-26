@@ -107,81 +107,81 @@ class RuleExtractor:
         Print.YELLOW.print("'Feature Vectors' have been created.")
         return feature_vectors, None, None, None
 
-    def convert_feature_vectors_into_left_and_right_frames(self, feature_vectors: List[FeatureVector]) -> Tuple[DataFrame, DataFrame]:
+    def convert_feature_vectors_into_activation_and_target_frames(self, feature_vectors: List[FeatureVector]) -> Tuple[DataFrame, DataFrame]:
         if len(feature_vectors) > 0:
-            left_cols = feature_vectors[0].fromm.keys()
-            left_frame = pd.DataFrame(columns=left_cols)
-            right_cols = feature_vectors[0].to.keys()
-            right_frame = pd.DataFrame(columns=right_cols)
+            activation_cols = feature_vectors[0].fromm.keys()
+            activation_frame = pd.DataFrame(columns=activation_cols)
+            target_cols = feature_vectors[0].to.keys()
+            target_frame = pd.DataFrame(columns=target_cols)
 
         index = 0
         for row in feature_vectors:
-            left_app_yellow = []
-            for key in left_cols:
-                left_app_yellow = left_app_yellow + [row.fromm[key]]
-            left_frame.loc[index] = left_app_yellow
+            activation_app_yellow = []
+            for key in activation_cols:
+                activation_app_yellow = activation_app_yellow + [row.fromm[key]]
+            activation_frame.loc[index] = activation_app_yellow
 
-            right_app_yellow = []
-            for key in right_cols:
-                right_app_yellow = right_app_yellow + [row.to[key]]
-            right_frame.loc[index] = right_app_yellow
+            target_app_yellow = []
+            for key in target_cols:
+                target_app_yellow = target_app_yellow + [row.to[key]]
+            target_frame.loc[index] = target_app_yellow
 
             index += 1
 
-        return (left_frame, right_frame)
+        return (activation_frame, target_frame)
 
-    def convert_feature_vectors_into_left_and_right_frames_for_traces(self, feature_vectors: List[FeatureVector]) -> Tuple[DataFrame, DataFrame]:
+    def convert_feature_vectors_into_activation_and_target_frames_for_traces(self, feature_vectors: List[FeatureVector]) -> Tuple[DataFrame, DataFrame]:
         if len(feature_vectors) > 0:
-            left_cols = ['Trace'] + list(feature_vectors[0].fromm.keys())
-            left_frame = pd.DataFrame(columns=left_cols)
-            right_cols = ['Trace'] + list(feature_vectors[0].to.keys())
-            right_frame = pd.DataFrame(columns=right_cols)
+            activation_cols = ['Trace'] + list(feature_vectors[0].fromm.keys())
+            activation_frame = pd.DataFrame(columns=activation_cols)
+            target_cols = ['Trace'] + list(feature_vectors[0].to.keys())
+            target_frame = pd.DataFrame(columns=target_cols)
 
         index = 0
         for row in feature_vectors:
-            left_app_yellow = [row.trace]
-            for key in left_cols:
+            activation_app_yellow = [row.trace]
+            for key in activation_cols:
                 if key != 'Trace':
-                    left_app_yellow = left_app_yellow + [row.fromm[key]]
-            left_frame.loc[index] = left_app_yellow
+                    activation_app_yellow = activation_app_yellow + [row.fromm[key]]
+            activation_frame.loc[index] = activation_app_yellow
 
-            right_app_yellow = [row.trace]
-            for key in right_cols:
+            target_app_yellow = [row.trace]
+            for key in target_cols:
                 if key != 'Trace':
-                    right_app_yellow = right_app_yellow + [row.to[key]]
-            right_frame.loc[index] = right_app_yellow
+                    target_app_yellow = target_app_yellow + [row.to[key]]
+            target_frame.loc[index] = target_app_yellow
 
             index += 1
 
-        return (left_frame, right_frame)
+        return (activation_frame, target_frame)
 
     def write_to_CSV_(self, feature_vectors: List[FeatureVector], is_positive_or_negative_log: str) -> RedescriptionDataModel:
-        left_path = 'feature_vectors/csv_feature_vectors/' + is_positive_or_negative_log + '/left.csv'
-        right_path = 'feature_vectors/csv_feature_vectors/' + is_positive_or_negative_log + '/right.csv'
+        activation_path = 'feature_vectors/csv_feature_vectors/' + is_positive_or_negative_log + '/activation.csv'
+        target_path = 'feature_vectors/csv_feature_vectors/' + is_positive_or_negative_log + '/target.csv'
 
         if len(feature_vectors) > 0:
-            (left_frame, right_frame) = self.convert_feature_vectors_into_left_and_right_frames(feature_vectors=feature_vectors)
+            (activation_frame, target_frame) = self.convert_feature_vectors_into_activation_and_target_frames(feature_vectors=feature_vectors)
 
           
 
-            left_frame.to_csv(left_path)
-            right_frame.to_csv(right_path)
+            activation_frame.to_csv(activation_path)
+            target_frame.to_csv(target_path)
 
             if is_positive_or_negative_log == 'negative':
-                (left_frameTrace, right_frameTrace) = self.convert_feature_vectors_into_left_and_right_frames_for_traces(
+                (activation_frameTrace, target_frameTrace) = self.convert_feature_vectors_into_activation_and_target_frames_for_traces(
                     feature_vectors=feature_vectors)
                 merged_trace = 'feature_vectors/csv_feature_vectors/' + is_positive_or_negative_log + '/traces.csv'
-                merged = pd.merge(how='inner', on='Trace', left=left_frameTrace, right=right_frameTrace)
+                merged = pd.merge(how='inner', on='Trace', left=activation_frameTrace, right=target_frameTrace)
                 merged.drop_duplicates(subset=['Trace'], inplace=True)
                 merged.to_csv(merged_trace)
 
-            return RedescriptionDataModel(left_view=left_path, left_attributes=list(left_frame.columns), right_view=right_path, right_attributes=list(right_frame.columns))
+            return RedescriptionDataModel(activation_view=activation_path, activation_attributes=list(activation_frame.columns), target_view=target_path, target_attributes=list(target_frame.columns))
 
         else:
-            with open(left_path, 'wt') as a:
+            with open(activation_path, 'wt') as a:
                 a.write('')
-            with open(right_path, 'wt') as a:
+            with open(target_path, 'wt') as a:
                 a.write('')
 
-            return RedescriptionDataModel(left_view=left_path, left_attributes=[], right_view=right_path, right_attributes=[])
+            return RedescriptionDataModel(activation_view=activation_path, activation_attributes=[], target_view=target_path, target_attributes=[])
             

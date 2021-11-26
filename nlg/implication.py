@@ -22,21 +22,3 @@ class Implication:
 
     def __str__(self) -> str:
         return 'If ' + self.leftSide.__str__() + 'that implicates that ' + (self.rightSide.__str__()).strip() + '.'
-
-    # def extractTree(self):
-    #     dict = {}
-    #     dict['imply'] = [self.leftSide.tree, self.rightSide.tree]
-    #
-    #     return dict
-    #
-    # def extractCoNLL(self):
-    #     dict = {}
-    #     dict['imply'] = [self.leftSide.CoNLL, self.rightSide.CoNLL]
-    #
-    #     return dict
-    #
-    # def extractDSyntS(self):
-    #     dict = {}
-    #     dict['imply'] = [self.leftSide.DSyntS, self.rightSide.DSyntS]
-    #
-    #     return dict

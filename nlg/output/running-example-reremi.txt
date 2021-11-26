@@ -1,27 +1,50 @@
 --> The negative event log has the following rules:
             1. If the product amount varies between 7344 and 9642 that implicates that the order delivery is Slow. (r2)
-            2. If the product price stretches from 18022 to 19671 or the product amount stretches from 3941 to 6237 that implicates that the order discount alternates between 13 and 15. (r10)
-            3. If the order payment type is equal to PayPal that implicates that the order delivery is equal to Slow. (r23)
+            2. If the product price stretches from 18022 to 19671 or the product amount varies between 3941 and 6237 that implicates that the order discount stretches from 13 to 15. (r10)
+            3. If the order payment type is equal to PayPal that implicates that the order delivery is Slow. (r23)
 
 --> While the positive event log has the following rules:
-            1. If the product price is bigger than 3697 that implicates that the order delivery is equal to Fast. (r2)
-            2. If the product amount is bigger than 4709 that implicates that the process is executed by Company. (r5)
-            3. If the product amount is lower than 4704 that implicates that the process is executed by Customer. (r7)
-            4. If the order delivery is Fast that implicates that the order discount stretches from 17 to 47. (r9)
+            1. If the product price exceeds 3697 that implicates that the order delivery is equal to Fast. (r2)
+            2. If the product amount exceeds 4709 that implicates that the process is executed by Company. (r5)
+            3. If the product amount is lower than 4704 that implicates that the order resource is Customer. (r7)
+            4. If the order delivery is Fast that implicates that the order discount alternates between 17 and 47. (r9)
             5. If the order discount alternates between 17 and 47 that implicates that the order delivery is Fast. (r11)
             6. If the order payment type is Transfer that implicates that the order delivery is Slow. (r12)
-            7. If the order payment type is equal to PayPal that implicates that the order delivery is equal to Fast. (r13)
+            7. If the order payment type is equal to PayPal that implicates that the order delivery is Fast. (r13)
 
 Comparisons between the set of negative and positive redescription rules that relate on the attribute names, but have different nature:
-The first mined negative rule  is 'If the order payment type is equal to PayPal that implicates that the order delivery is Slow. (r23)' and its subrules comparisons to the positive subrules are below:
-          - The payment type for the event 'Close Order' is equal to PayPal in the negative rule, while in the positive rule r12, it is Transfer.
+The first mined negative rule  is 'If the order payment type is PayPal that implicates that the order delivery is Slow. (r23)' and its subrules comparisons to the positive subrules are below:
+          - The payment type for the event 'Close Order' is PayPal in the negative rule, while in the positive rule r12, it is Transfer.
           - The delivery for the event 'Deliver Order' is Slow in the negative rule, while in the positive rule r12, it is Slow.
-          - The payment type for the event 'Close Order' is equal to PayPal in the negative rule, while in the positive rule r13, it is PayPal.
+          - The payment type for the event 'Close Order' is PayPal in the negative rule, while in the positive rule r13, it is equal to PayPal.
           - The delivery for the event 'Deliver Order' is Slow in the negative rule, while in the positive rule r13, it is Fast.
 
 Concrete examples of traces that failed:
-The process execution with 'Case No. 49' is deviant because the product amount is not below 4704 (r7).
-The process execution with 'Case No. 106' is deviant because the order delivery differs from Fast (r2).
-The process execution with 'Case No. 106' is deviant because the order delivery differs from Fast (r2).
-The process execution with 'Case No. 49' is deviant because the product amount is not below 4704 (r7).
-The process execution with 'Case No. 49' is deviant because the product amount is not below 4704 (r7).
+The process execution with 'Case No. 196' is deviant because the order delivery is unequal to Fast (r2).
+The process execution with 'Case No. 163' is deviant because the order delivery is unequal to Fast (r2).
+The process execution with 'Case No. 125' is deviant because the order delivery is not Fast (r2).
+The process execution with 'Case No. 181' is deviant because the order delivery differs from Fast (r2).
+The process execution with 'Case No. 5' is deviant because the product amount is higher than 4704 (r7).
+The process execution with 'Case No. 63' is deviant because the order delivery differs from Fast (r9), the process is not executed by Company (r5) and the order delivery differs from Fast (r11).
+The process execution with 'Case No. 174' is deviant because the process is not executed by Company (r5), the order delivery is not Fast (r13) and the product amount is not below 4704 (r7).
+The process execution with 'Case No. 132' is deviant because t(r5).
+The process execution with 'Case No. 130' is deviant because t(r5).
+The process execution with 'Case No. 108' is deviant because the order discount does not range from 17 to 47 (r11), the process is not executed by Company (r5) and the order delivery is unequal to Fast (r9).
+The process execution with 'Case No. 122' is deviant because the process is not executed by Company (r5) and the product amount is not below 4704 (r7).
+The process execution with 'Case No. 70' is deviant because t(r5).
+The process execution with 'Case No. 72' is deviant because the order delivery differs from Fast (r9) and the order discount does not range from 17 to 47 (r11).
+The process execution with 'Case No. 49' is deviant because the order delivery differs from Fast (r9) and the order discount does not range from 17 to 47 (r11).
+The process execution with 'Case No. 120' is deviant because the order delivery is not Fast (r9) and the order discount doesn't stretch from 17 to 47 (r11).
+The process execution with 'Case No. 149' is deviant because the order delivery differs from Fast (r9) and the order discount does not vary between 17 and 47 (r11).
+The process execution with 'Case No. 101' is deviant because the order delivery is unequal to Fast (r9) and the order discount does not vary between 17 and 47 (r11).
+The process execution with 'Case No. 172' is deviant because the order delivery is unequal to Fast (r9) and the order discount doesn't alternate between 17 and 47 (r11).
+The process execution with 'Case No. 40' is deviant because the order delivery is unequal to Fast (r9) and the order discount doesn't stretch from 17 to 47 (r11).
+The process execution with 'Case No. 74' is deviant because the order delivery is unequal to Fast (r9) and the order delivery is unequal to Fast (r11).
+The process execution with 'Case No. 155' is deviant because the order delivery is not Fast (r13), the order discount doesn't alternate between 17 and 47 (r11) and the order delivery differs from Fast (r9).
+The process execution with 'Case No. 18' is deviant because the order delivery is unequal to Fast (r9) and the order discount does not vary between 17 and 47 (r11).
+The process execution with 'Case No. 184' is deviant because the order delivery is not Fast (r9) and the order discount doesn't alternate between 17 and 47 (r11).
+The process execution with 'Case No. 22' is deviant because the order delivery is unequal to Fast (r9) and the order discount doesn't alternate between 17 and 47 (r11).
+The process execution with 'Case No. 173' is deviant because the order delivery is unequal to Slow (r12) and the order payment type differs from PayPal (r13).
+The process execution with 'Case No. 197' is deviant because the order delivery differs from Slow (r12) and the order payment type is unequal to PayPal (r13).
+The process execution with 'Case No. 168' is deviant because the order delivery differs from Slow (r12) and the order payment type is not PayPal (r13).
+The process execution with 'Case No. 157' is deviant because the order payment type is not Transfer (r12) and the order delivery is unequal to Fast (r13).

@@ -16,22 +16,3 @@ class Parentheses:
 
     def __str__(self):
         return self.rule.__str__()
-        # return '(' + self.rule.__str__() + ')'
-
-    # def extractTree(self):
-    #     dict = {}
-    #     dict['parentheses'] = self.rule.tree
-    #
-    #     return dict
-    #
-    # def extractCoNLL(self):
-    #     dict = {}
-    #     dict['parentheses'] = self.rule.CoNLL
-    #
-    #     return dict
-    #
-    # def extractDSyntS(self):
-    #     dict = {}
-    #     dict['parentheses'] = self.rule.DSyntS
-    #
-    #     return dict

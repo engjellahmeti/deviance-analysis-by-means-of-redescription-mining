@@ -11,201 +11,10 @@ import os
 class Comparison:
     def __init__(self, setOfRules, filename=None):
         self.setOfRules = setOfRules
-        # self.negative = {'imply': [{'or': [{'Amount': {'activity': 'ApplyForCredit', 'interval': '(316389, +∞)', 'output': 'the credit amount is bigger than 316389 '}}, {'parentheses': {'and': [{'Amount': {'activity': 'ApplyForCredit', 'interval': '(100, 200)', 'output': 'the credit amount varies between 100 and 200 '}}, {'not': {'Salary': {'activity': 'ApplyForCredit', 'interval': '(1000, 2000)', 'output': 'the credit salary does not range from 1000 to 2000 '}}}]}}]}, {'AssessmentCost': {'activity': 'Assessment', 'interval': '(60, 65)', 'output': 'the assessment cost stretches from 60 to 65 '}}]}
-        # self.positive = {'imply': [{'and': [{'Amount': {'activity': 'ApplyForCredit', 'interval': '(50000, 50000)', 'output': 'the credit amount equals to 50000 '}}, {'Salary': {'activity': 'ApplyForCredit', 'interval': '(-∞, 100)', 'output': 'the credit salary is smaller than 100 '}}]}, {'AssessmentCost': {'activity': 'Assessment', 'interval': '(-∞, 100.0)', 'output': 'the assessment cost is below 100 '}}]}
-        # self.positive1 = {'imply': [{'and': [{'Amount': {'activity': 'ApplyForCredit', 'interval': '(50000, 50000)', 'output': 'the credit amount equals to 50000 '}}, {'Salary': {'activity': 'ApplyForCredit', 'interval': '(-∞, 100)', 'output': 'the credit salary is smaller than 100 '}}]}, {'AssessmentCost': {'activity': 'Assessment', 'interval': '(-∞, 100.0)', 'output': 'the assessment cost is below 100 '}}]}
-        #
-        # self.setOfRules = [(self.negative, [self.positive, self.positive1])]
         self.listt = []
         self.dictRule = {}
         self.filename = filename
         self.ruleIDExtract = None
-
-    def compare_other_logic(self):
-        negListt = []
-        posListt = []
-        days = {1:'first', 2:'second', 3:'third', 4:'fourth', 5:'fifth', 6:'sixth', 7:'seventh', 8:'eigth', 9:'ninth', 10:'tenth', 11:'eleventh'}
-        Print.GREEN.print('Comparisons between the set of negative and positive redescription rules that relate on the attribute names, but have different nature: ')
-        index = 1
-
-        for row in self.setOfRules:
-            ruleId = row[0].ruleID
-            if ruleId is not None:
-                Print.END.print('The {1} mined negative rule  is \'{0} ({2})\' and its subrules comparisons to the positive subrules are below:'.format(Print.RED.__call__(row[0].__str__()), days[index], ruleId))
-            else:
-                Print.END.print('The {1} mined negative rule is \'{0}\' and its subrules comparisons to the positive subrules are below:'.format(Print.RED.__call__(row[0].__str__()), days[index]))
-
-            self.extractLeaves((row[0].tree)['imply'][0], row[0].__str__())
-            left = self.listt
-            self.listt = []
-            self.extractLeaves((row[0].tree)['imply'][1], row[0].__str__())
-            right = self.listt
-            self.listt = []
-            if len(left) > 1 or len(right) > 1:
-                self.extractLeaves(row[0].tree, row[0].__str__())
-                negListt = self.listt
-            else:
-                negListt = [(left, right)]
-            self.listt = []
-
-            index += 1
-
-            temp = ''
-            for rowP in row[1]:
-                temp = '\n           - {0}'.format( rowP.__str__())
-                self.ruleIDExtract = rowP.ruleID
-                self.extractLeaves(rowP.tree, row[0].__str__())
-                self.ruleIDExtract = None
-                posListt = posListt + self.listt
-                self.listt = []
-
-            listCompare = []
-            for itemTotal in negListt:
-                if isinstance(itemTotal, tuple):
-                    item = itemTotal[0][0]
-                temp = posListt
-                for itemPos in temp:
-                    negKey = list(item.keys())[0]
-                    posKey = list(itemPos.keys())[0]
-
-                    if negKey == posKey and item[negKey]['activity'] == itemPos[posKey]['activity'] and itemPos[posKey]['activationOrTarget'] == itemPos[negKey]['activationOrTarget']:
-                        if item[negKey]['interval'] != itemPos[negKey]['interval']:
-                            if '(' in item[negKey]['interval']:
-                                valuesPos = re.sub('[\(\)\s]', '', itemPos[negKey]['interval'])
-                                valuesPos = re.sub('\.0', '', valuesPos)
-                                valuesPos = re.sub('-∞', '-1', valuesPos)
-                                valuesPos = re.sub(r'\+∞', '214748364', valuesPos)
-                                valuesPos = valuesPos.split(',')
-                                valuesPos = [int(x) for x in valuesPos]
-
-                                valuesNeg = re.sub('[\(\)\s]', '', item[negKey]['interval'])
-                                valuesNeg = re.sub('\.0', '', valuesNeg)
-                                valuesNeg = re.sub('-∞', '-1', valuesNeg)
-                                valuesNeg = re.sub(r'\+∞', '214748364', valuesNeg)
-                                valuesNeg = valuesNeg.split(',')
-                                valuesNeg = [int(x) for x in valuesNeg]
-
-
-                                if valuesNeg[1] < valuesPos[0] or valuesPos[1] < valuesNeg[0]:
-                                    activity = re.sub(r"(\w)([A-Z])", r"\1 \2", item[negKey]['activity'])
-                                    attribute = re.sub(r"(\w)([A-Z])", r"\1 \2", negKey)
-
-                                    listCompare.append((activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']))
-                                    posListt.remove(itemPos)
-
-                                elif valuesPos[0] > valuesNeg[0] and valuesPos[1] > valuesNeg[1]:
-                                    pass
-
-                            else:
-                                activity = re.sub(r"(\w)([A-Z])", r"\1 \2", item[negKey]['activity'])
-                                attribute = re.sub(r"(\w)([A-Z])", r"\1 \2", negKey)
-
-                                listCompare.append((activity, attribute, item[negKey]['output'],
-                                                    itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'],
-                                                    item[negKey]['fullOutput'], itemPos[negKey]['ruleID']))
-                                posListt.remove(itemPos)
-
-            posListt = []
-            # Print.END.print('The output')
-            for item in listCompare:
-                negativeContent = re.search(r'{0}\s*(.*$)'.format(item[1].lower()), item[2], re.S|re.I)
-                if negativeContent:
-                    negativeContent = negativeContent.group(1)
-                elif 'executed' in item[2]:
-                    negativeContent = re.sub('the process ', '', item[2])
-
-
-                positiveContent = re.search(r'{0}\s*(.*$)'.format(item[1].lower()), item[3], re.S|re.I)
-                if positiveContent:
-                    positiveContent = positiveContent.group(1)
-                elif 'executed' in item[3]:
-                    positiveContent = re.sub('the process ', '', item[3])
-
-                posRuleId = item[6]
-
-                Print.END.print('          - The {0} for the event \'{1}\' {2}in the negative rule, while in the positive rule {5}, it {3}.'
-                                .format(item[1].lower(), Print.BLUE.__call__(item[0]),
-                                        negativeContent,
-                                        (positiveContent).strip(), Print.RED.__call__(item[5]), posRuleId)
-
-                                )
-            print()
-
-    def compare_prev(self):
-        negListt = []
-        posListt = []
-        days = {1:'first', 2:'second', 3:'third', 4:'fourth', 5:'fifth', 6:'sixth', 7:'seventh', 8:'eigth', 9:'ninth', 10:'tenth', 11:'eleventh'}
-        Print.GREEN.print('Comparisons between the set of negative and positive redescription rules that relate on the attribute names, but have different nature: ')
-        index = 1
-
-        for row in self.setOfRules:
-            ruleId = row[0].ruleID
-            if ruleId is not None:
-                Print.END.print(
-                    'The {1} mined negative rule  is \'{0} ({2})\' and its subrules comparisons to the positive subrules are below:'.format(
-                        Print.RED.__call__(row[0].__str__()), days[index], ruleId))
-            else:
-                Print.END.print(
-                    'The {1} mined negative rule is \'{0}\' and its subrules comparisons to the positive subrules are below:'.format(
-                        Print.RED.__call__(row[0].__str__()), days[index]))
-
-            self.extractLeaves(row[0].tree, row[0].__str__())
-            negListt = self.listt
-            self.listt = []
-
-            index += 1
-
-            temp = ''
-            for rowP in row[1]:
-                temp = '\n           - {0}'.format( rowP.__str__())
-                self.ruleIDExtract = rowP.ruleID
-                self.extractLeaves(rowP.tree, row[0].__str__())
-                self.ruleIDExtract = None
-                posListt = posListt + self.listt
-                self.listt = []
-
-            listCompare = []
-            for item in negListt:
-
-                temp = posListt
-                saveRuleId = None
-                for itemPos in temp:
-                    negKey = list(item.keys())[0]
-                    posKey = list(itemPos.keys())[0]
-
-                    if negKey == posKey and item[negKey]['activity'] == itemPos[posKey]['activity'] and itemPos[posKey]['activationOrTarget'] == itemPos[negKey]['activationOrTarget']:
-                        if item[negKey]['interval'] != itemPos[negKey]['interval']:
-                            activity = re.sub(r"(\w)([A-Z])", r"\1 \2", item[negKey]['activity'])
-                            attribute = re.sub(r"(\w)([A-Z])", r"\1 \2", negKey)
-
-                            listCompare.append((activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']))
-                            posListt.remove(itemPos)
-                            saveRuleId =  itemPos[negKey]['ruleID']
-
-
-            posListt = []
-            # Print.END.print('The output')
-            for item in listCompare:
-                negativeContent = re.search(r'{0}\s*(.*$)'.format(item[1].lower()), item[2], re.S|re.I)
-                if negativeContent:
-                    negativeContent = negativeContent.group(1)
-                elif 'executed' in item[2]:
-                    negativeContent = re.sub('the process ', '', item[2])
-
-
-                positiveContent = re.search(r'{0}\s*(.*$)'.format(item[1].lower()), item[3], re.S|re.I)
-                if positiveContent:
-                    positiveContent = positiveContent.group(1)
-                elif 'executed' in item[3]:
-                    positiveContent = re.sub('the process ', '', item[3])
-
-                Print.END.print('          - The {0} for the event \'{1}\' {2}in the negative rule, while in the positive rule {5}, it {3}.'
-                                .format(item[1].lower(), Print.BLUE.__call__(item[0]),
-                                        negativeContent,
-                                        (positiveContent).strip(), Print.RED.__call__(item[5]), item[6])
-
-                                )
-            print()
 
     def compare(self):
         negListt = []
@@ -287,18 +96,6 @@ class Comparison:
         
         return output
 
-    def keepRulesOfARule(self, setOfComparison):
-        dict = {}
-        for item in setOfComparison:
-            attribute = item.keys()[0]
-            ruleid = item[attribute]['ruleID']
-            
-            if ruleid in dict.keys():
-                dict[ruleid].append(item)
-            else:
-                dict[ruleid] = [item]
-        return dict
-
     def extractLeaves(self, tree, fullOutput):
         if type(tree) is list:
             for row in tree:
@@ -335,7 +132,7 @@ class Comparison:
 
 
 
-            attributesInRule = self.extract(rule['query_LHS'], rule['LHS_vars'].split(',')) + self.extract(rule['query_RHS'], rule['RHS_vars'].split(','))
+            attributesInRule = self.extract(rule['query_activation'], rule['activation_vars'].split(',')) + self.extract(rule['query_target'], rule['target_vars'].split(','))
             # frameReturned = self.solveRuleForFrame(rule, merged, attributesInRule)
 
             for row in merged.iterrows():
@@ -421,21 +218,21 @@ class Comparison:
         for rule in positiveRules.iterrows():
             rule = rule[1]
             rid = rule['rid']
-            leftRule_ = re.sub('\|', 'or', rule['query_LHS'])
+            leftRule_ = re.sub('\|', 'or', rule['query_activation'])
             leftRule_ = re.sub('\&', 'and', leftRule_)
 
-            rightRule_ = re.sub('\|', 'or', rule['query_RHS'])
+            rightRule_ = re.sub('\|', 'or', rule['query_target'])
             rightRule_ = re.sub('\&', 'and', rightRule_)
 
             if '_x' in mergedColumns and '_y' in mergedColumns:
                 vars = re.findall(r'([A-Za-z]+)_', mergedColumns, re.S|re.I)
                 if vars:
                     vars = set(vars)
-                    leftQuery = rule['query_LHS']
-                    leftVars = rule['LHS_vars']
+                    leftQuery = rule['query_activation']
+                    leftVars = rule['activation_vars']
 
-                    rightQuery = rule['query_RHS']
-                    rightVars = rule['RHS_vars']
+                    rightQuery = rule['query_target']
+                    rightVars = rule['target_vars']
                     for var in vars:
                         leftQuery = re.sub(var, var + '_x', leftQuery)
                         leftVars = re.sub(var, var + '_x', leftVars)
@@ -452,15 +249,15 @@ class Comparison:
                     attributesInRule = self.extract(leftQuery, leftVars.split(',')) + self.extract(rightQuery, rightVars.split(','))
 
             else:
-                attributesInRule = self.extract(rule['query_LHS'], rule['LHS_vars'].split(',')) + self.extract(rule['query_RHS'], rule['RHS_vars'].split(','))
+                attributesInRule = self.extract(rule['query_activation'], rule['activation_vars'].split(',')) + self.extract(rule['query_target'], rule['target_vars'].split(','))
 
 
             for row in merged.iterrows():
                 row = row[1]
-                # leftRule = re.sub('\|', 'or', rule['query_LHS'])
+                # leftRule = re.sub('\|', 'or', rule['query_activation'])
                 # leftRule = re.sub('\&', 'and', leftRule)
                 #
-                # rightRule = re.sub('\|', 'or', rule['query_RHS'])
+                # rightRule = re.sub('\|', 'or', rule['query_target'])
                 # rightRule = re.sub('\&', 'and', rightRule)
                 leftRule = leftRule_
                 rightRule = rightRule_
@@ -658,21 +455,21 @@ class Comparison:
         for rule in positiveRules.iterrows():
             rule = rule[1]
             rid = rule['rid']
-            leftRule_ = re.sub('\|', 'or', rule['query_LHS'])
+            leftRule_ = re.sub('\|', 'or', rule['query_activation'])
             leftRule_ = re.sub('\&', 'and', leftRule_)
 
-            rightRule_ = re.sub('\|', 'or', rule['query_RHS'])
+            rightRule_ = re.sub('\|', 'or', rule['query_target'])
             rightRule_ = re.sub('\&', 'and', rightRule_)
 
             if '_x' in mergedColumns and '_y' in mergedColumns:
                 vars = re.findall(r'([A-Za-z]+)_', mergedColumns, re.S | re.I)
                 if vars:
                     vars = set(vars)
-                    leftQuery = rule['query_LHS']
-                    leftVars = rule['LHS_vars']
+                    leftQuery = rule['query_activation']
+                    leftVars = rule['activation_vars']
 
-                    rightQuery = rule['query_RHS']
-                    rightVars = rule['RHS_vars']
+                    rightQuery = rule['query_target']
+                    rightVars = rule['target_vars']
                     for var in vars:
                         leftQuery = re.sub(var, var + '_x', leftQuery)
                         leftVars = re.sub(var, var + '_x', leftVars)
@@ -692,9 +489,9 @@ class Comparison:
 
             else:
 
-                attributesInRule = self.extractSplitTrees(rule['query_LHS'],
-                                                          rule['LHS_vars'].split(',')) + self.extractSplitTrees(
-                    rule['query_RHS'], rule['RHS_vars'].split(','))
+                attributesInRule = self.extractSplitTrees(rule['query_activation'],
+                                                          rule['activation_vars'].split(',')) + self.extractSplitTrees(
+                    rule['query_target'], rule['target_vars'].split(','))
 
             for row in merged.iterrows():
                 row = row[1]
@@ -941,11 +738,11 @@ class Comparison:
         return (leftRule, rightRule)
 
     def solveRuleForRow(self, rule, row, attRules):
-        vars = list(rule['LHS_vars'].split(',')) + list(rule['RHS_vars'].split(','))
-        leftRule = re.sub('\|', 'or', rule['query_LHS'])
+        vars = list(rule['activation_vars'].split(',')) + list(rule['target_vars'].split(','))
+        leftRule = re.sub('\|', 'or', rule['query_activation'])
         leftRule = re.sub('\&', 'and', leftRule)
 
-        rightRule = re.sub('\|', 'or', rule['query_RHS'])
+        rightRule = re.sub('\|', 'or', rule['query_target'])
         rightRule = re.sub('\&', 'and', rightRule)
 
         for var in vars:
@@ -1036,11 +833,11 @@ class Comparison:
         return not (self.solveStringExpression(leftRule) and self.solveStringExpression(rightRule))
 
     def solveRuleForFrame(self, rule, frame, attRules):
-        vars = list(rule['LHS_vars'].split(',')) + list(rule['RHS_vars'].split(','))
-        leftRule = re.sub('\|', 'or', rule['query_LHS'])
+        vars = list(rule['activation_vars'].split(',')) + list(rule['target_vars'].split(','))
+        leftRule = re.sub('\|', 'or', rule['query_activation'])
         leftRule = re.sub('\&', 'and', leftRule)
 
-        rightRule = re.sub('\|', 'or', rule['query_RHS'])
+        rightRule = re.sub('\|', 'or', rule['query_target'])
         rightRule = re.sub('\&', 'and', rightRule)
 
         newFrame = pd.DataFrame(columns=frame.columns)
@@ -1341,11 +1138,11 @@ class Comparison:
         if '_x' in attribute or '_y' in attribute:
             attribute = re.sub('_[a-z]', '', attribute)
 
-        if attribute in rule['LHS_vars']:
-            return rule['LHS_activity']
+        if attribute in rule['activation_vars']:
+            return rule['activation_activity']
 
-        elif attribute in rule['RHS_vars']:
-            return rule['RHS_activity']
+        elif attribute in rule['target_vars']:
+            return rule['target_activity']
 
     def outputNLG(self, ruleID, nlp, activity, attribute, type, first, second, dict=None, trace=None):
         attribute = re.sub('_[a-z]', '', attribute)

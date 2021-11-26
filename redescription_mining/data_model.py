@@ -5,8 +5,8 @@ from typing import List
 
 
 class RedescriptionDataModel:
-    def __init__(self, left_view: str, left_attributes: List[str], right_view: str, right_attributes: List[str]):
-        self.left_view = left_view
-        self.left_attributes = left_attributes
-        self.right_view = right_view
-        self.right_attributes = right_attributes
+    def __init__(self, activation_view: str, activation_attributes: List[str], target_view: str, target_attributes: List[str]):
+        self.activation_view = activation_view
+        self.activation_attributes = activation_attributes
+        self.target_view = target_view
+        self.target_attributes = target_attributes

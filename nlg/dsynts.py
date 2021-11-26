@@ -17,9 +17,6 @@ class DSyntS:
     def __repr__(self):
         return json.dumps(self.to_dict(), indent=2, ensure_ascii=False)
 
-    # def __str__(self):
-    #     return '{\n "id":' + str(self.id) +',' + '\n "form":' + str(self.form) +',' + '\n "lemma":' + str(self.lemma) +',' + '\n "pos":' + str(self.pos) +',' + '\n "ppos":' + str(self.ppos) +',' + '\n "feat":' + str(self.feat) +',' + '\n "head":' + str(self.head) +','  + '\n "deprel":' + str(self.deprel)  +'\n}'
-
     def to_dict(self):
         word_dict = {}
         word_dict['id'] = self.id

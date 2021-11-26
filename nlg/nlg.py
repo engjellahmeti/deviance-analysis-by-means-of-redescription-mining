@@ -42,8 +42,8 @@ class NLG:
             for row_neg in negative.iterrows():
                 row_neg = row_neg[1]
 
-                if set(sorted(row_neg['LHS_vars'])).issubset(sorted(row['LHS_vars'])) and set(
-                        sorted(row_neg['RHS_vars'])).issubset(sorted(row['RHS_vars'])):
+                if set(sorted(row_neg['activation_vars'])).issubset(sorted(row['activation_vars'])) and set(
+                        sorted(row_neg['target_vars'])).issubset(sorted(row['target_vars'])):
                     listOfRules = list(row_neg[negative.columns])
                     listOfRules1 = list(row[positive.columns])
                     listOfRules2 = listOfRules + listOfRules1
@@ -239,8 +239,8 @@ class NLG:
 
         final = self.findRulesThatCorrespond(negativePath, positivePath)
         groups = final.groupby(
-            ['query_LHS-negative', 'LHS_vars-negative', 'LHS_activity-negative', 'query_RHS-negative',
-             'RHS_vars-negative', 'RHS_activity-negative','constraint-negative'])
+            ['query_activation-negative', 'activation_vars-negative', 'activation_activity-negative', 'query_target-negative',
+             'target_vars-negative', 'target_activity-negative','constraint-negative'])
 
         setOfRules = []
         redescriptions = []
@@ -256,17 +256,17 @@ class NLG:
             for row in groupOfRules.iterrows():
                 row = row[1]
 
-                positiveNLGLeft = self.setupObjects(row['query_LHS'
-                                                        '-positive'], row['LHS_vars-positive'].split(','),
-                                                    row['LHS_activity-negative'], 'activation')
+                positiveNLGLeft = self.setupObjects(row['query_activation'
+                                                        '-positive'], row['activation_vars-positive'].split(','),
+                                                    row['activation_activity-negative'], 'activation')
 
-                positiveNLGRight = self.setupObjects(row['query_RHS-positive'],
-                                                     row['RHS_vars-positive'].split(','), row['RHS_activity-negative'], 'target')
+                positiveNLGRight = self.setupObjects(row['query_target-positive'],
+                                                     row['target_vars-positive'].split(','), row['target_activity-negative'], 'target')
 
-                positiveRule = Implication(positiveNLGLeft, positiveNLGRight, self.extract_dsynts_on_leafs, row['constraint-negative'], row['query_LHS-positive'], row['query_RHS-positive'], row['rid-positive'])
+                positiveRule = Implication(positiveNLGLeft, positiveNLGRight, self.extract_dsynts_on_leafs, row['constraint-negative'], row['query_activation-positive'], row['query_target-positive'], row['rid-positive'])
 
                 positiveRules.append(positiveRule)
-                redescriptionsPos.append(row['query_LHS-positive'] + ' => ' + row['query_RHS-positive'])
+                redescriptionsPos.append(row['query_activation-positive'] + ' => ' + row['query_target-positive'])
 
             setOfRules.append((negativeRule, positiveRules))
             redescriptions.append((name[0] + ' => ' + name[3], redescriptionsPos))
@@ -284,29 +284,29 @@ class NLG:
 
         for row in negative.iterrows():
             row = row[1]
-            left = self.setupObjects(row['query_LHS'], row['LHS_vars'].split(','),
-                                     row['LHS_activity'], 'activation')
+            left = self.setupObjects(row['query_activation'], row['activation_vars'].split(','),
+                                     row['activation_activity'], 'activation')
 
-            right = self.setupObjects(row['query_RHS'],
-                                      row['RHS_vars'].split(','), row['RHS_activity'],
+            right = self.setupObjects(row['query_target'],
+                                      row['target_vars'].split(','), row['target_activity'],
                                       'target')
 
             rule = Implication(left, right, self.extract_dsynts_on_leafs,
-                               row['constraint'], row['query_LHS'], row['query_RHS'])
+                               row['constraint'], row['query_activation'], row['query_target'])
 
             negRules.append((rule, row['rid']))
 
         for row in positive.iterrows():
             row = row[1]
-            left = self.setupObjects(row['query_LHS'], row['LHS_vars'].split(','),
-                                     row['LHS_activity'], 'activation')
+            left = self.setupObjects(row['query_activation'], row['activation_vars'].split(','),
+                                     row['activation_activity'], 'activation')
 
-            right = self.setupObjects(row['query_RHS'],
-                                      row['RHS_vars'].split(','), row['RHS_activity'],
+            right = self.setupObjects(row['query_target'],
+                                      row['target_vars'].split(','), row['target_activity'],
                                       'target')
 
             rule = Implication(left, right, self.extract_dsynts_on_leafs,
-                               row['constraint'], row['query_LHS'], row['query_RHS'])
+                               row['constraint'], row['query_activation'], row['query_target'])
 
             posRules.append((rule, row['rid']))
 

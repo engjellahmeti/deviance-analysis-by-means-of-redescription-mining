@@ -17,21 +17,3 @@ class Conjunction:
 
     def __str__(self) -> str:
         return self.leftSide.__str__() + 'and ' + self.rightSide.__str__()
-
-    # def extractTree(self):
-    #     dict = {}
-    #     dict['and'] = [self.leftSide.tree, self.rightSide.tree]
-    #
-    #     return dict
-    #
-    # def extractCoNLL(self):
-    #     dict = {}
-    #     dict['and'] = [self.leftSide.CoNLL, self.rightSide.CoNLL]
-    #
-    #     return dict
-    #
-    # def extractDSyntS(self):
-    #     dict = {}
-    #     dict['and'] = [self.leftSide.DSyntS, self.rightSide.DSyntS]
-    #
-    #     return dict
