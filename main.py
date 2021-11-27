@@ -391,7 +391,7 @@ if __name__ == '__main__':
 
     else:
         extract_dsynts_on_leafs = False
-        input_type = 2
+        input_type = 8
         algorithm = 'reremi' # 'splittrees' reremi
         config_or_template = 'template' # 'config'
         main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template)
