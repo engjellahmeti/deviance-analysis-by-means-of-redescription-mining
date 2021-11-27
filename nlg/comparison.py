@@ -36,7 +36,7 @@ class Comparison:
                 Print.END.print('The {1} mined negative rule is \'{0}\' and its subrules comparisons to the positive subrules are below:'.format(Print.RED.__call__(row[0].__str__()), days[index]))
                 output += 'The {1} mined negative rule is \'{0}\' and its subrules comparisons to the positive subrules are below:\n'.format(row[0].__str__(), days[index])
 
-            self.extractLeaves(row[0].tree, row[0].__str__())
+            self.extractSubrules(row[0].tree, row[0].__str__())
             negListt = self.listt
             self.listt = []
 
@@ -47,7 +47,7 @@ class Comparison:
             for rowP in row[1]:
                 temp = '\n           - {0}'.format(rowP.__str__())
                 self.ruleIDExtract = rowP.ruleID
-                self.extractLeaves(rowP.tree, row[0].__str__())
+                self.extractSubrules(rowP.tree, row[0].__str__())
                 posListt = posListt + self.listt
                 dictPositive[self.ruleIDExtract] = posListt
                 self.listt = []
@@ -96,7 +96,7 @@ class Comparison:
         
         return output
 
-    def extractLeaves(self, tree, fullOutput):
+    def extractSubrules(self, tree, fullOutput):
         if type(tree) is list:
             for row in tree:
                 for key in row.keys():
@@ -107,7 +107,7 @@ class Comparison:
                         self.listt.append(temp)
 
                     else:
-                        self.extractLeaves(row[key], fullOutput)
+                        self.extractSubrules(row[key], fullOutput)
 
         else:
             for key in tree.keys():
@@ -117,7 +117,7 @@ class Comparison:
                     temp[key]['ruleID'] = self.ruleIDExtract
                     self.listt.append(temp)
                 else:
-                    self.extractLeaves(tree[key], fullOutput)
+                    self.extractSubrules(tree[key], fullOutput)
 
     def deviantTraces(self, positiveRules, nlp):
         merged = pd.read_csv('../feature_vectors/csv_feature_vectors/negative/traces.csv', index_col=0)

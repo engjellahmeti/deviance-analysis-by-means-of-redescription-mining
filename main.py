@@ -98,10 +98,10 @@ class Main:
     # endregion
 
     # region 2. Input real positive and negative event logs
-    def input_real_positive_and_negative_event_logs(self, positive_event_log_path: str, negative_event_log_path: str) -> Optional[Tuple[DataFrame, DataFrame]]:
-        log_id = self.rxes.self.rxes(file_path=positive_event_log_path)
+    def input_real_positive_and_negative_event_logs(self, filename: str, positive_event_log_path: str, negative_event_log_path: str) -> Optional[Tuple[DataFrame, DataFrame]]:
+        log_id = self.rxes.rxes(file_path=positive_event_log_path)
 
-        declare_constraints = self.rxes.get_respone_constraints(log_id=log_id, no_of_rows=100, type_of_constraints='not mp')
+        declare_constraints = self.rxes.mine_constraints(filename=filename, log_id=2, no_of_rows=20)
         
         negative = None
         positive = None
@@ -391,7 +391,7 @@ if __name__ == '__main__':
 
     else:
         extract_dsynts_on_leafs = False
-        input_type = 8
+        input_type = 2
         algorithm = 'reremi' # 'splittrees' reremi
         config_or_template = 'template' # 'config'
         main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template)
@@ -428,7 +428,7 @@ if __name__ == '__main__':
         negative_event_log_path = 'event_log_reader/logs/'+filename+'-negative.xes'
         positive_event_log_path = 'event_log_reader/logs/'+filename+'-positive.xes'
 
-        (negative, positive) = main.input_real_positive_and_negative_event_logs(positive_event_log_path=positive_event_log_path, negative_event_log_path=negative_event_log_path)
+        (negative, positive) = main.input_real_positive_and_negative_event_logs(filename=filename, positive_event_log_path=positive_event_log_path, negative_event_log_path=negative_event_log_path)
 
     elif input_type == 3:
         negative_event_log_path = 'event_log_reader/logs/'+filename+'-negative.xes'

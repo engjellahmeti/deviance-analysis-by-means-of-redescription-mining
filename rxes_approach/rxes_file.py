@@ -10,6 +10,7 @@ import pandas as pd
 from feature_vectors.declare_constraint import DeclareConstraint
 from log_print import Print
 from typing import List
+import os
 
 class RXESApproach:
     def __init__(self):
@@ -66,7 +67,7 @@ class RXESApproach:
             for case in cases.keys():
                 for event in case:
                     trace = event.caseID
-                    activity = event.activityName
+                    activity = re.sub(' ', '', event.activityName)
                     timestamp = event.timestamp
                     timestamp = dt.datetime.strptime(re.sub(r'\+\d*:\d*', '', timestamp), '%Y-%m-%dT%H:%M:%S.%f')
 
@@ -153,11 +154,29 @@ class RXESApproach:
 
             return logId
 
-    def get_respone_constraints(self, log_id, no_of_rows, type_of_constraints) -> List[DeclareConstraint]:
+    def mine_constraints(self, filename, log_id, no_of_rows) -> List[DeclareConstraint]:
+        mined_constraints: List[DeclareConstraint] = []
+        mined_constraints = mined_constraints + self.get_response_constraints(log_id=log_id, no_of_rows=no_of_rows)
+        mined_constraints = mined_constraints + self.get_chain_response_constraints(log_id=log_id, no_of_rows=no_of_rows)
+        mined_constraints = mined_constraints + self.get_alternate_response_constraints(log_id=log_id, no_of_rows=no_of_rows)
+        mined_constraints = mined_constraints + self.get_precedence_constraints(log_id=log_id, no_of_rows=no_of_rows)
+        mined_constraints = mined_constraints + self.get_chain_precedence_constraints(log_id=log_id, no_of_rows=no_of_rows)
+        mined_constraints = mined_constraints + self.get_alternate_precedence_constraints(log_id=log_id, no_of_rows=no_of_rows)
+
+        path = os.path.abspath('rxes_approach/mined_constraints/' + filename +'.decl')
+        with open(path, 'wt') as a:
+            a.write("Constraint,Activitation,Target\n")
+        
+            for constraint in mined_constraints:
+                a.write("{0},{1},{2}\n".format(constraint.rule_type, constraint.activation, constraint.target))
+        
+        return mined_constraints            
+
+    def get_response_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
         try:
             cnxn = pyodbc.connect(self.connection_string)
-            sql = "SET NOCOUNT ON; exec GetResponseDeclareConstraints @logID={0}, @noOfRows={1}, @typeOfConstraints='{2}'".format(log_id, no_of_rows, type_of_constraints)
-            Print.YELLOW.print('Extracting multi perspective constraints from the DB.')
+            sql = "SET NOCOUNT ON; exec GetResponseDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining response constraints from the DB.')
 
             declare_constraints_frame = pd.read_sql(sql, cnxn)
 
@@ -165,6 +184,116 @@ class RXESApproach:
             for row in declare_constraints_frame.iterrows():
                 row = row[1]
                 dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['A'], target=row['B'])
+                if dc not in declare_constraints:
+                    declare_constraints.append(dc)
+
+            return declare_constraints
+
+        except Exception as e:
+            Print.RED.print(e)
+            cnxn.close()
+            return None
+    
+    def get_chain_response_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
+        try:
+            cnxn = pyodbc.connect(self.connection_string)
+            sql = "SET NOCOUNT ON; exec GetChainResponseDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining chain response constraints from the DB.')
+
+            declare_constraints_frame = pd.read_sql(sql, cnxn)
+
+            declare_constraints: List[DeclareConstraint] = []
+            for row in declare_constraints_frame.iterrows():
+                row = row[1]
+                dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['A'], target=row['B'])
+                if dc not in declare_constraints:
+                    declare_constraints.append(dc)
+
+            return declare_constraints
+
+        except Exception as e:
+            Print.RED.print(e)
+            cnxn.close()
+            return None
+    
+    def get_alternate_response_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
+        try:
+            cnxn = pyodbc.connect(self.connection_string)
+            sql = "SET NOCOUNT ON; exec GetAlternateResponseDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining alternate response constraints from the DB.')
+
+            declare_constraints_frame = pd.read_sql(sql, cnxn)
+
+            declare_constraints: List[DeclareConstraint] = []
+            for row in declare_constraints_frame.iterrows():
+                row = row[1]
+                dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['A'], target=row['B'])
+                if dc not in declare_constraints:
+                    declare_constraints.append(dc)
+
+            return declare_constraints
+
+        except Exception as e:
+            Print.RED.print(e)
+            cnxn.close()
+            return None
+
+    def get_precedence_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
+        try:
+            cnxn = pyodbc.connect(self.connection_string)
+            sql = "SET NOCOUNT ON; exec GetPrecedenceDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining precedence constraints from the DB.')
+
+            declare_constraints_frame = pd.read_sql(sql, cnxn)
+
+            declare_constraints: List[DeclareConstraint] = []
+            for row in declare_constraints_frame.iterrows():
+                row = row[1]
+                dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['B'], target=row['A'])
+                if dc not in declare_constraints:
+                    declare_constraints.append(dc)
+
+            return declare_constraints
+
+        except Exception as e:
+            Print.RED.print(e)
+            cnxn.close()
+            return None
+
+    def get_chain_precedence_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
+        try:
+            cnxn = pyodbc.connect(self.connection_string)
+            sql = "SET NOCOUNT ON; exec GetChainPrecedenceDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining chain precedence constraints from the DB.')
+
+            declare_constraints_frame = pd.read_sql(sql, cnxn)
+
+            declare_constraints: List[DeclareConstraint] = []
+            for row in declare_constraints_frame.iterrows():
+                row = row[1]
+                dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['B'], target=row['A'])
+                if dc not in declare_constraints:
+                    declare_constraints.append(dc)
+
+            return declare_constraints
+
+        except Exception as e:
+            Print.RED.print(e)
+            cnxn.close()
+            return None
+
+    def get_alternate_precedence_constraints(self, log_id, no_of_rows) -> List[DeclareConstraint]:
+        try:
+            cnxn = pyodbc.connect(self.connection_string)
+            sql = "SET NOCOUNT ON; exec GetAlternatePrecedenceDeclareConstraints @logID={0}, @noOfRows={1}".format(log_id, no_of_rows)
+            Print.YELLOW.print('Mining alternate precedence constraints from the DB.')
+
+            declare_constraints_frame = pd.read_sql(sql, cnxn)
+
+            declare_constraints: List[DeclareConstraint] = []
+            for row in declare_constraints_frame.iterrows():
+                row = row[1]
+                dc = DeclareConstraint(rule_type=row['TypeOfConstraint'], activation=row['B'], target=row['A'])
                 if dc not in declare_constraints:
                     declare_constraints.append(dc)
 
