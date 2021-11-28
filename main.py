@@ -20,10 +20,12 @@ from typing import List, Optional, Tuple
 
 
 class Main:
-    def __init__(self, extract_dsynts_on_leafs, algorithm, config_or_template):
+    def __init__(self, extract_dsynts_on_leafs, algorithm, config_or_template, filename):
         self.algorithms = ['reremi', 'layeredtrees', 'splittrees', 'cartwheel']
         self.algorithm = algorithm
         self.config_or_template = config_or_template
+        self.filename = filename
+        self.spl_trees = []
         if algorithm is not None:
             self.ruleExt = RuleExtractor()
             self.redesc = RedescriptionMining()
@@ -189,8 +191,60 @@ class Main:
 
         return (set_of_rules, redescriptions, output)
 
+    def extract_spl_trees(self, tree):
+        if type(tree) is list:
+            for row in tree:
+                for key in row.keys():
+                    if key not in ['imply', 'or', 'and', 'not', 'parentheses']:
+                        temp = row.copy()
+                        self.spl_trees.append(temp[key]['spl'])
+                    else:
+                        self.extract_spl_trees(row[key])
+
+        else:
+            for key in tree.keys():
+                if key not in ['imply', 'or', 'and', 'not', 'parentheses']:
+                    temp = tree.copy()
+                    self.spl_trees.append(temp[key]['spl'])
+                else:
+                    self.extract_spl_trees(tree[key])
+
+    def save_spl_trees(self, negative_rules, positive_rules):
+        path = os.path.abspath('nlg/spl_trees/' + self.filename + '-' + self.algorithm + '.spl')
+        
+        with open(path, 'wt') as a:
+            a.write('--------------------Negative rules--------------------\n')
+            a.write('\n')
+
+            for negative_rule in negative_rules:
+                a.write('   Rule {0}:  {1}\n'.format(negative_rule[1], re.sub(r'\.0', '', negative_rule[2])))
+
+                self.extract_spl_trees(negative_rule[0].SPL)
+                for spl in self.spl_trees:
+                    a.write('       {0}\n'.format(spl.lower()))
+                
+                a.write('\n')
+
+                self.spl_trees = []
+
+
+            a.write('--------------------Positive rules--------------------\n')
+            a.write('\n')
+
+            for positive_rule in positive_rules:
+                a.write('   Rule {0}:  {1}\n'.format(positive_rule[1], re.sub(r'\.0', '', positive_rule[2])))
+
+                self.extract_spl_trees(positive_rule[0].SPL)
+                for spl in self.spl_trees:
+                    a.write('       {0}\n'.format(spl.lower()))
+
+                a.write('\n')
+                self.spl_trees = []
+        
     def nlgCall_v2(self, negative_redescriptions_path, positive_redescriptions_path, print_bool=False):
         (negative_rules, positive_rules) = self.nlg_.nlgSplit(negative_redescriptions_path, positive_redescriptions_path)
+        self.save_spl_trees(negative_rules=negative_rules, positive_rules=positive_rules)
+
         output = ''
         if print_bool:
             Print.CYAN.print('--> The negative event log has the following rules: ')
@@ -383,20 +437,21 @@ class Main:
 if __name__ == '__main__':
     Print.YELLOW.print('The tool has started. ')
     config_or_template = 'template' # 'config'
-    main = Main(extract_dsynts_on_leafs=None, algorithm=None, config_or_template=None)
+    main = Main(extract_dsynts_on_leafs=None, algorithm=None, config_or_template=None, filename=None)
 
     if len(sys.argv[1:]) > 0:
         (input_type, algorithm, filename, extract_dsynts_on_leafs, declare_filename, amount_of_traces, min_trace_length, max_trace_length) = main.extract_arguments(sys.argv[1:])
-        main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template)
+        main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template, filename=filename)
 
     else:
         extract_dsynts_on_leafs = False
         input_type = 8
         algorithm = 'reremi' # 'splittrees' reremi
         config_or_template = 'template' # 'config'
-        main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template)
         filename = 'running-example'#'#credit-application-subset' #running-example' # road-traffic-fines,repair-example
         declare_filename = 'Running Example'#Credit Application Subset'#Running Example' # 'FirstPaperExample'  # Repair Example, Road Traffic Fines
+        main = Main(extract_dsynts_on_leafs=extract_dsynts_on_leafs, algorithm=algorithm, config_or_template=config_or_template, filename=filename)
+
 
     if input_type == 1:
         generate_logs = True
@@ -454,7 +509,7 @@ if __name__ == '__main__':
         (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
 
         output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
-
+        
         output += output_compare
         # print()
         output_deviant = main.print_trace_failure(traces=traces, k=5)

@@ -294,7 +294,7 @@ class NLG:
             rule = Implication(left, right, self.extract_dsynts_on_leafs,
                                row['constraint'], row['query_activation'], row['query_target'])
 
-            negRules.append((rule, row['rid']))
+            negRules.append((rule, row['rid'], row['query_activation'] + ' => ' + row['query_target']))
 
         for row in positive.iterrows():
             row = row[1]
@@ -308,6 +308,6 @@ class NLG:
             rule = Implication(left, right, self.extract_dsynts_on_leafs,
                                row['constraint'], row['query_activation'], row['query_target'])
 
-            posRules.append((rule, row['rid']))
+            posRules.append((rule, row['rid'], row['query_activation'] + ' => ' + row['query_target']))
 
         return (negRules, posRules)
