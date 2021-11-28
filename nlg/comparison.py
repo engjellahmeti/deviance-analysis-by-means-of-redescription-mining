@@ -7,6 +7,7 @@ import pandas as pd
 import stanza
 import random as rd
 import os
+import math
 
 class Comparison:
     def __init__(self, setOfRules, filename=None):
@@ -54,29 +55,22 @@ class Comparison:
                 self.ruleIDExtract = None
 
 
-            listCompare = []
+            listOfDifferences = []
             for rule in dictPositive.keys():
                 for itemPos in dictPositive[rule]:
                     for item in negListt:
                         negKey = list(item.keys())[0]
                         posKey = list(itemPos.keys())[0]
 
-                        if negKey == posKey and item[negKey]['activity'] == itemPos[posKey]['activity'] and itemPos[posKey][
-                            'activationOrTarget'] == itemPos[negKey]['activationOrTarget']:
-                            # if item[negKey]['interval'] != itemPos[negKey]['interval']:
+                        if negKey == posKey and item[negKey]['activity'] == itemPos[posKey]['activity'] and itemPos[posKey]['activationOrTarget'] == itemPos[negKey]['activationOrTarget']:
                             activity = re.sub(r"(\w)([A-Z])", r"\1 \2", item[negKey]['activity'])
                             attribute = re.sub(r"(\w)([A-Z])", r"\1 \2", negKey)
 
-                            listCompare.append((activity, attribute, item[negKey]['output'], itemPos[posKey]['output'],
-                                                itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'],
-                                                itemPos[negKey]['ruleID']))
-                            # posListt.remove(itemPos)
-                            saveRuleId = itemPos[negKey]['ruleID']
-
+                            listOfDifferences = self.extractAttributesWithDifferentValues(listOfDifferences, activity, attribute, item, itemPos, negKey, posKey)        
 
             posListt = []
             # Print.END.print('The output')
-            for item in listCompare:
+            for item in listOfDifferences:
                 negativeContent = re.search(r'{0}\s*(.*$)'.format(item[1].lower()), item[2], re.S | re.I)
                 if negativeContent:
                     negativeContent = negativeContent.group(1)
@@ -95,6 +89,32 @@ class Comparison:
             output += '\n'
         
         return output
+
+    def extractAttributesWithDifferentValues(self, listOfDifferences, activity, attribute, item, itemPos, negKey, posKey):
+        if '(' in item[negKey]['interval'] and '(' in itemPos[negKey]['interval']:
+            negInterval = re.sub('\s|\)|\(', '', item[negKey]['interval']).split(',')
+            posInterval = re.sub('\s|\)|\(', '', itemPos[negKey]['interval']).split(',')
+
+            start_neg = int(negInterval[0]) if '-∞' != negInterval[0] else -math.inf
+            end_eng =  int(negInterval[1]) if '+∞' != negInterval[1] else math.inf
+
+            start_pos = int(posInterval[0]) if '-∞' != posInterval[0] else -math.inf
+            end_pos =  int(posInterval[1]) if '+∞' != posInterval[1] else math.inf
+
+
+            if not (start_pos <= start_neg and end_eng <= end_pos):
+                if (activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']) not in listOfDifferences:
+                    listOfDifferences.append((activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']))
+            
+
+        elif item[negKey]['interval'] != itemPos[negKey]['interval']:
+            activity = re.sub(r"(\w)([A-Z])", r"\1 \2", item[negKey]['activity'])
+            attribute = re.sub(r"(\w)([A-Z])", r"\1 \2", negKey)
+
+            if (activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']) not in listOfDifferences:
+                listOfDifferences.append((activity, attribute, item[negKey]['output'], itemPos[posKey]['output'], itemPos[negKey]['activationOrTarget'], item[negKey]['fullOutput'], itemPos[negKey]['ruleID']))
+
+        return listOfDifferences                    
 
     def extractSubrules(self, tree, fullOutput):
         if type(tree) is list:

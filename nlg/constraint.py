@@ -37,8 +37,8 @@ class Constraint:
                 self.type = '1<'
 
             elif self.second:
-                self.interval = '(-∞, ' + self.second + ')'
                 self.second = re.sub('\.0', '', second)
+                self.interval = '(-∞, ' + self.second + ')'
                 self.type = '2<'
 
 
