@@ -2,6 +2,7 @@
 # @author Engjëll Ahmeti
 # @date 1/23/2021
 from nlg.extraction import Extraction
+import random as rd
 
 class Implication:
     def __init__(self, leftSide, rightSide, extract=True, constraintType='', leftRule=None, rightRule=None, ruleID=None):
@@ -21,4 +22,6 @@ class Implication:
         self.DSyntS = extraction.DSyntS
 
     def __str__(self) -> str:
-        return 'If ' + self.leftSide.__str__() + 'that implicates that ' + (self.rightSide.__str__()).strip() + '.'
+        choices = ['that implicates that ', 'that implies that ', 'that implies ']
+        return 'If ' + self.leftSide.__str__() + rd.choice(choices) + (self.rightSide.__str__()).strip() + '.'
+		#return 'If ' + self.leftSide.__str__() + 'that implicates that ' + (self.rightSide.__str__()).strip() + '.'
