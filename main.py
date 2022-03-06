@@ -584,23 +584,23 @@ if __name__ == '__main__':
         output = main.input_declare_file_with_only_one_event_log(is_positive_or_negative_log='positive', filename=filename, declare_file_path=declare_file_path)
 
     if input_type > 3 or (negative is not None and positive is not None):
-        # traces = main.generate_traces_for_nlg_example_output(declare_filename=declare_filename, filename=filename, algorithm=algorithm)
-        # #
-        # negative_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-negative.queries')
-        # positive_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-positive.queries')
-        # (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
+        traces = main.generate_traces_for_nlg_example_output(declare_filename=declare_filename, filename=filename, algorithm=algorithm)
+        #
+        negative_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-negative.queries')
+        positive_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-positive.queries')
+        (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
 
-        # output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
+        output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
         
-        # output += output_compare
-        # # print()
-        # output_deviant = main.print_trace_failure(traces=traces, k=5)
+        output += output_compare
+        # print()
+        output_deviant = main.print_trace_failure(traces=traces, k=5)
 
-        # output += output_deviant
+        output += output_deviant
 
-        # output_path = os.path.abspath('nlg/output/'+filename+'-'+algorithm+'.txt')
-        # with open(output_path, 'wt') as a:
-        #     a.write(output)
+        output_path = os.path.abspath('nlg/output/'+filename+'-'+algorithm+'.txt')
+        with open(output_path, 'wt') as a:
+            a.write(output)
         
         
         results = main.evaluation_metrics(filename, algorithm) #os.path.abspath('nlg/output/repair-example-reremi.txt'))
