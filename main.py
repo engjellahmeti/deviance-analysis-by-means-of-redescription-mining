@@ -6,6 +6,7 @@ import re
 from pandas.core.frame import DataFrame
 from feature_vectors.declare_constraint import DeclareConstraint
 from feature_vectors.rule_extractor import RuleExtractor
+from nlg.metrics import Metrics
 from redescription_mining.redescription import RedescriptionMining
 from event_log_generation.generate_logs import GenerateEventLogs
 from rxes_approach.rxes_file import RXESApproach
@@ -26,6 +27,7 @@ class Main:
         self.config_or_template = config_or_template
         self.filename = filename
         self.spl_trees = []
+        self.metrics = Metrics()
         if algorithm is not None:
             self.ruleExt = RuleExtractor()
             self.redesc = RedescriptionMining()
@@ -384,6 +386,86 @@ class Main:
         return output
     # endregion
 
+    # region NLG Metrics
+    def calculate_metrics(self, gen_file_path, ref_file_path, n_for_rouge):
+        file_ref = open(ref_file_path, 'r')
+        ref = file_ref.readlines()
+        # ref = list(filter(('\n').__ne__, ref))
+        ref.remove('--> The negative event log has the following rules:\n')
+        ref.remove('--> While the positive event log has the following rules:\n')
+
+        file_gen = open(gen_file_path, 'r')
+        gen = file_gen.readlines()
+        # gen = list(filter(('\n').__ne__, gen))
+        gen.remove('--> The negative event log has the following rules:\n')
+        gen.remove('--> While the positive event log has the following rules:\n')
+
+        for i, l in enumerate(gen):
+            gen[i] = re.sub(r'\n', '', l).strip()
+
+        for i, l in enumerate(ref):
+            ref[i] = re.sub(r'\n', '', l).strip()
+        
+        ter_score = self.metrics.ter(ref, gen)
+        bleu_score = self.metrics.bleu(ref, gen)
+        rouge_score = self.metrics.rouge_n(ref, gen, n=n_for_rouge)
+
+        return (ter_score, bleu_score, rouge_score)
+
+    def count_rules(self, filename, algorithm):
+        deviant_df = pd.read_csv(os.path.abspath('redescription_mining/results/' + filename + '-' + algorithm + '-negative.queries'))
+        positive_df = pd.read_csv(os.path.abspath('redescription_mining/results/' + filename + '-' + algorithm + '-positive.queries'))
+        return (positive_df.shape[0], deviant_df.shape[0])
+
+    def evaluation_metrics(self, filename=None, algorithm=None, n_for_rouge=2):
+        results = {}
+        if not filename or not algorithm:
+            list_of_files = os.listdir('nlg/output/')
+            for file in list_of_files:
+                regex = re.search(r'(.*?)-(reremi|splittrees)', file, re.S|re.I)
+                filename = re.sub('-', ' ', regex.group(1))
+                algorithm = regex.group(2)
+                
+                if algorithm == 'splittrees':
+                    if filename == 'credit application subset' or filename == 'running example':
+                        # continue
+                        pass
+                
+                count_positive_rules, count_deviant_rules = self.count_rules(regex.group(1), algorithm)
+                gen_file_path = os.path.abspath('nlg/output/' + file)
+                ref_file_path = os.path.abspath('nlg/target/' + file)
+                (ter_score, bleu_score, rouge_score) = self.calculate_metrics(gen_file_path, ref_file_path, n_for_rouge)
+                results[filename + ' ' + algorithm] = {
+                        "filename": filename,
+                        "algorithm": algorithm,
+                        "BLEU (Bilingual Evaluation Understudy Score)": bleu_score, 
+                        "ROUGE (Recall Oriented Understudy for Gisting Evaluation)": rouge_score, 
+                        "TER (Translation Edit Rate)": ter_score,
+                        "Count of Positive Rules": count_positive_rules,
+                        "Count of Deviant Rules": count_deviant_rules                       
+                }
+
+            return results
+
+        gen_file_path = os.path.abspath('nlg/output/' + filename + '-' + algorithm + '.txt')
+        ref_file_path = os.path.abspath('nlg/target/'  + filename + '-' + algorithm + '.txt')
+        count_positive_rules, count_deviant_rules = self.count_rules(filename, algorithm)
+
+        (ter_score, bleu_score, rouge_score) = self.calculate_metrics(gen_file_path, ref_file_path, n_for_rouge)
+        results[filename + ' ' + algorithm] = {
+                        "filename": filename,
+                        "algorithm": algorithm,
+                        "BLEU (Bilingual Evaluation Understudy Score)": bleu_score, 
+                        "ROUGE (Recall Oriented Understudy for Gisting Evaluation)": rouge_score, 
+                        "TER (Translation Edit Rate)": ter_score,
+                        "Count of Positive Rules": count_positive_rules,
+                        "Count of Deviant Rules": count_deviant_rules   
+                }
+
+        return results
+
+    #endregion
+
     #region Extract Arguments
     def extract_arguments(self, argv):
         input_type: int = -1
@@ -502,21 +584,33 @@ if __name__ == '__main__':
         output = main.input_declare_file_with_only_one_event_log(is_positive_or_negative_log='positive', filename=filename, declare_file_path=declare_file_path)
 
     if input_type > 3 or (negative is not None and positive is not None):
-        traces = main.generate_traces_for_nlg_example_output(declare_filename=declare_filename, filename=filename, algorithm=algorithm)
-        #
-        negative_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-negative.queries')
-        positive_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-positive.queries')
-        (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
+        # traces = main.generate_traces_for_nlg_example_output(declare_filename=declare_filename, filename=filename, algorithm=algorithm)
+        # #
+        # negative_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-negative.queries')
+        # positive_redescription_path = os.path.abspath('redescription_mining/results/'+filename+'-'+algorithm+'-positive.queries')
+        # (set_of_rules, redescriptions, output) = main.nlgCall_v2(negative_redescriptions_path=negative_redescription_path, positive_redescriptions_path=positive_redescription_path, print_bool=True)
 
-        output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
+        # output_compare = main.nlg_.apply_comparisons(set_of_rules=set_of_rules, filename=filename +'-'+algorithm)
         
-        output += output_compare
-        # print()
-        output_deviant = main.print_trace_failure(traces=traces, k=5)
+        # output += output_compare
+        # # print()
+        # output_deviant = main.print_trace_failure(traces=traces, k=5)
 
-        output += output_deviant
+        # output += output_deviant
 
-        with open(os.path.abspath('nlg/output/'+filename+'-'+algorithm+'.txt'), 'wt') as a:
-            a.write(output)
+        # output_path = os.path.abspath('nlg/output/'+filename+'-'+algorithm+'.txt')
+        # with open(output_path, 'wt') as a:
+        #     a.write(output)
+        
+        
+        results = main.evaluation_metrics(filename, algorithm) #os.path.abspath('nlg/output/repair-example-reremi.txt'))
+
+        for key in results.keys():
+            result = results[key]
+            print('The metrics for event log "{0}" using {1} algorithm:'.format(result['filename'], result['algorithm']))
+            for metric_key in result.keys():
+                if metric_key != 'filename' and metric_key != 'algorithm':
+                    print('      {0}: {1}'.format(metric_key, result[metric_key]))
+            print()
 
     print()
