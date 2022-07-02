@@ -25,4 +25,27 @@ How to run the code:
   - amount_of_traces - number of amount of traces to be generated per event log
   - min_trace_length - the min. number of events per trace
   - max_trace_length - the max. number of events per trace
-  
+ 
+## Citations
+If you're using *Deviance Analysis by means of Redescription Mining* approach in your research or applications, please cite using this BibTeX:
+```
+@InProceedings{10.1007/978-3-031-07475-2_7,
+	author="K{\"a}ppel, Martin
+	and Ahmeti, Engj{\"e}ll
+	and Jablonski, Stefan",
+	editor="Augusto, Adriano
+	and Gill, Asif
+	and Bork, Dominik
+	and Nurcan, Selmin
+	and Reinhartz-Berger, Iris
+	and Schmidt, Rainer",
+	title="Deviance Analysis by Means of Redescription Mining",
+	booktitle="Enterprise, Business-Process and Information Systems Modeling",
+	year="2022",
+	publisher="Springer International Publishing",
+	address="Cham",
+	pages="91--107",
+	abstract="Often business processes deviate in a positive or negative way from their expected or desired behavior. Deviance mining aims at detecting deviant process executions and at revealing their causes. In this paper we propose a novel approach for identifying the causes of a deviant process execution based on redescription mining, which extracts knowledge in form of logical rules. By analyzing, combining, and filtering these rules we identify the reasons for the deviating behavior of a business process in general as well as of particular process instances. Afterwards the results of this analysis are transformed into an understandable and well-readable natural language text that can be taken by business analysts and process owners to optimize processes in a reasoned manner.",
+	isbn="978-3-031-07475-2"
+}
+```
